@@ -62,8 +62,7 @@ def diff_cumulative_precip(df):
     year=[g for n,g in df.groupby(pd.Grouper(key='date', freq='Y'))]
     for y in year:
         diff_precip=y['precipitation'].diff()
-        y.insert(3,'diff_precipitation',diff_precip)
-        y['diff_precipitation_normal']=y['precipitation_normal'].diff()
+        y.insert(2,'diff_precipitation',diff_precip)
     df_diff=pd.concat(year)
     df_diff.reset_index(drop=True, inplace=True)
     return df_diff
@@ -80,22 +79,65 @@ plt.plot(CLE_2015['date'], CLE_2015['diff_precipitation'], label='differentiate 
 plt.plot(CLE_2015['date'], CLE_2015['diff_precipitation_normal'], label='differentiate normal precipitation')
 plt.legend()
 
-# Try the function on Charlotte
-CHA_data=weather_data[weather_data['city']=='Charlotte']
-CHA_diff=diff_cumulative_precip(CHA_data)
-print(CHA_diff.dtypes)
-CHA_2015=CHA_diff[CLE_diff.date.between('2015-01-01','2015-12-31')]
-plt.plot(CHA_2015['date'], CHA_2015['precipitation'], label='precipitation')
-plt.plot(CHA_2015['date'], CHA_2015['precipitation_normal'], label='normal precipitation')
-plt.plot(CHA_2015['date'], CHA_2015['diff_precipitation'], label='differentiate precipitation')
-plt.plot(CHA_2015['date'], CHA_2015['diff_precipitation_normal'], label='differentiate normal precipitation')
+# avg temperature (we will work with Cleveland data set)
+x=CLE_2015['date']
+y1=CLE_2015['temp_max']
+y2=CLE_2015['temp_min']
+yy1=CLE_2015['temp_normal_max']
+yy2=CLE_2015['temp_normal_min']
+plt.fill_between(x, y1, y2, label='effective temperature', color='blue', alpha=0.7)
+plt.fill_between(x, yy1, yy2, label='normal temperature', color='lightblue', alpha=0.5)
 plt.legend()
 
+def avg_temperature(df):
+    avg_temp=(df['temp_max']+df['temp_min'])/2
+    df.insert(5,'avg_temp',avg_temp)
+    avg_temp_normal=(df['temp_normal_max']+df['temp_normal_min'])/2
+    df.insert(6,'avg_temp_normal',avg_temp_normal)
+    return df
 
-# avg temperature
+
+CLE_data1=avg_temperature(CLE_diff)
+CLE_2015=avg_temperature(CLE_2015)
+
+x=CLE_2015['date']
+y1=CLE_2015['temp_max']
+y2=CLE_2015['temp_min']
+yy1=CLE_2015['temp_normal_max']
+yy2=CLE_2015['temp_normal_min']
+y_avg1=CLE_2015['avg_temp']
+y_avg2=CLE_2015['avg_temp_normal']
+plt.fill_between(x, y1, y2, label='effective temperature', color='blue', alpha=0.7)
+plt.fill_between(x, yy1, yy2, label='normal temperature', color='lightblue', alpha=0.5)
+plt.plot(x,y_avg1, label='average temperature', color='red', alpha=0.6)
+plt.plot(x,y_avg2, label='average normal temperature', color='orange', alpha=0.5)
+plt.legend()
+
+# include season
+
+
+def season_of_date(date):
+    year = str(date.year)
+    seasons = {'spring': pd.date_range(start='21/03/'+year, end='20/06/'+year),
+               'summer': pd.date_range(start='21/06/'+year, end='22/09/'+year),
+               'autumn': pd.date_range(start='23/09/'+year, end='20/12/'+year)}
+    if date in seasons['spring']:
+        return 'spring'
+    if date in seasons['summer']:
+        return 'summer'
+    if date in seasons['autumn']:
+        return 'autumn'
+    else:
+        return 'winter'
+
+
+season=CLE_data1.date.map(season_of_date)
+CLE_data1.insert(1,'season',season)
 
 
 
-# season
+
+
+
 
 
